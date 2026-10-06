@@ -1,4 +1,6 @@
 # aws-iam-misconfiguration-detector
+
+[![CI](https://github.com/samanthamuthoni/aws-iam-misconfiguration-detector/actions/workflows/ci.yml/badge.svg?branch=feat%2Foffline-analysis&event=push)](https://github.com/samanthamuthoni/aws-iam-misconfiguration-detector/actions/workflows/ci.yml)
 Python security tool for detecting risky AWS IAM policies, excessive permissions, missing safeguards, and credential hygiene issues.
 
 ## Development status
@@ -23,12 +25,13 @@ Limitations:
 - This is not a complete AWS policy validator or effective-permissions evaluator.
 - Statements containing Condition are deferred by IAM001; they are not
   classified as safe.
-- Remaining security rules, condition interpretation, GitHub Actions, and
-  live AWS scanning are not implemented yet.
+- Remaining security rules, condition interpretation, and live AWS
+  scanning are not implemented yet.
 - IAM002 severity is a preliminary review priority. ARN breadth and
   condition effectiveness still require deeper analysis.
 
-Tests and Ruff checks have passed locally in GitHub Codespaces.
+Tests and Ruff checks passed locally in GitHub Codespaces and in GitHub
+Actions on Python 3.11 and 3.14 for commit `6605f90`.
 
 
 ## Local setup
