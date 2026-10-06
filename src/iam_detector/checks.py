@@ -91,3 +91,56 @@ def check_service_wildcard(statement: dict[str, Any], index: int = 1) -> Finding
             "Scope resources where supported and review applicable conditions."
         ),
     )
+
+
+def check_allow_exclusions(statement: dict[str, Any], index: int = 1) -> Finding | None:
+    """Review Allow statements that use permission exclusions."""
+    if statement["Effect"] != "Allow":
+        return None
+
+    exclusions = [key for key in ("NotAction", "NotResource") if key in statement]
+    if not exclusions:
+        return None
+
+    # Excluding everything leaves nothing allowed in that dimension.
+    if any("*" in statement[key] for key in exclusions):
+        return None
+
+    broad_resources = "NotResource" in statement or "*" in statement.get("Resource", [])
+    severity = Severity.HIGH if broad_resources else Severity.MEDIUM
+
+    notes = []
+    if "NotAction" in statement:
+        notes.append(
+            "NotAction allows applicable actions outside its exclusion list. "
+            "Resource scope still limits which actions are applicable."
+        )
+    if "NotResource" in statement:
+        notes.append(
+            "NotResource applies the allowed actions to applicable resources "
+            "outside its exclusion list."
+        )
+    if "Condition" in statement:
+        notes.append(
+            "Conditions are present; their effectiveness has not been evaluated."
+        )
+    else:
+        notes.append("No conditions are present.")
+
+    notes.append(
+        "This review priority is preliminary. Effective access depends on "
+        "other policies, explicit denies, and applicable permission limits."
+    )
+
+    return Finding(
+        rule_id="IAM003",
+        severity=severity,
+        statement_index=index,
+        title=f"Allow statement uses {', '.join(exclusions)}",
+        description=" ".join(notes),
+        remediation=(
+            "Prefer explicit Action and Resource allowlists for the workload. "
+            "If exclusions are necessary, review their scope and conditions "
+            "and test intended access."
+        ),
+    )

@@ -84,3 +84,20 @@ python -m ruff format --check src tests
 python -m ruff check src tests
 python -m pytest -q
 ```
+
+### Allow statements with exclusions (IAM003)
+
+IAM003 reviews Allow statements that use NotAction or NotResource.
+These exclusions can grant permissions beyond the actions or resources
+a policy author intended.
+
+Severity is a preliminary review priority. Conditions and effective AWS
+permissions are not evaluated. Deny statements are not flagged by this rule.
+
+Run the synthetic example:
+
+```bash
+python -m iam_detector.cli examples/allow-exclusions.json
+```
+
+Local validation: 76 tests passed, along with Ruff formatting and lint checks.

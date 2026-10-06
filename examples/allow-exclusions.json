@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowActionsExceptIAM",
+      "Effect": "Allow",
+      "NotAction": "iam:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowS3WritesExceptOneBucket",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "NotResource": "arn:aws:s3:::synthetic-protected-bucket/*"
+    }
+  ]
+}
