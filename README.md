@@ -101,3 +101,26 @@ python -m iam_detector.cli examples/allow-exclusions.json
 ```
 
 Local validation: 76 tests passed, along with Ruff formatting and lint checks.
+
+### Wildcard role selection with PassRole (IAM004)
+
+IAM004 reviews Allow statements with an explicit iam:PassRole action.
+It assigns High priority for Resource "*" and Medium priority for
+other resource patterns containing "*" or "?".
+
+The rule reports conditions without evaluating their effectiveness.
+It does not inspect role permissions, role trust, or related service
+permissions, so a finding does not prove an exploitable escalation path.
+
+Current limitations: IAM004 does not detect PassRole implied by wildcard
+actions or NotAction, and it does not analyze NotResource. An exact role
+ARN receiving no IAM004 finding does not establish that the role is safe.
+
+Run the synthetic example:
+
+```bash
+python -m iam_detector.cli examples/passrole-broad.json
+```
+
+Local validation after adding IAM004: 85 tests passed, along with Ruff
+formatting and lint checks.

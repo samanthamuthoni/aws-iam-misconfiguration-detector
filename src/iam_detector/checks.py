@@ -144,3 +144,43 @@ def check_allow_exclusions(statement: dict[str, Any], index: int = 1) -> Finding
             "and test intended access."
         ),
     )
+
+
+def check_passrole(statement: dict[str, Any], index: int = 1) -> Finding | None:
+    """Review explicit PassRole grants with wildcard resource scope."""
+    if statement["Effect"] != "Allow" or "Resource" not in statement:
+        return None
+
+    actions = statement.get("Action", [])
+    if not any(action.lower() == "iam:passrole" for action in actions):
+        return None
+
+    resources = statement["Resource"]
+    if not any("*" in resource or "?" in resource for resource in resources):
+        return None
+
+    severity = Severity.HIGH if "*" in resources else Severity.MEDIUM
+    condition_note = (
+        "Conditions are present; their effectiveness has not been evaluated."
+        if "Condition" in statement
+        else "No conditions are present."
+    )
+
+    return Finding(
+        rule_id="IAM004",
+        severity=severity,
+        statement_index=index,
+        title="PassRole allows wildcard role selection",
+        description=(
+            "This statement permits passing roles selected by a wildcard. "
+            "With compatible service permissions and role trust, a caller "
+            "could make a service use a role with greater privileges. "
+            f"{condition_note} "
+            "This finding does not prove an exploitable escalation path."
+        ),
+        remediation=(
+            "Specify approved role ARNs, restrict the destination service "
+            "with iam:PassedToService where appropriate, and review the "
+            "roles' permissions, trust policies, and related service access."
+        ),
+    )

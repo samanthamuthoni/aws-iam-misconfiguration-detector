@@ -1,3 +1,5 @@
+from iam_detector.checks import check_passrole
+
 """Read policy files for offline analysis."""
 
 import json
@@ -113,6 +115,7 @@ def analyze_policy(policy: dict[str, Any]) -> list[Finding]:
             check_admin_access,
             check_service_wildcard,
             check_allow_exclusions,
+            check_passrole,
         ):
             finding = check(normalized, index)
 
