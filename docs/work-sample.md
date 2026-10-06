@@ -57,4 +57,4 @@ Live AWS scanning is not implemented.
 
 
 Latest local validation after the PassRole wildcard update: 94 tests passed; Ruff formatting and lint checks passed.
-GitHub Actions verification for this update is pending.
+GitHub Actions checks passed on Python 3.11 and 3.14 for code commit a1948d7.
