@@ -197,3 +197,58 @@ def action_matches(pattern: str, action: str) -> bool:
     expression = re.escape(pattern.lower())
     expression = expression.replace(r"\*", ".*").replace(r"\?", ".")
     return re.fullmatch(expression, action.lower()) is not None
+
+
+def check_policy_versions(statement: dict[str, Any], index: int = 1) -> Finding | None:
+    """Review permissions to change managed policy versions."""
+    if statement["Effect"] != "Allow" or "Resource" not in statement:
+        return None
+
+    if check_admin_access(statement, index) is not None:
+        return None
+
+    targets = (
+        "iam:CreatePolicyVersion",
+        "iam:SetDefaultPolicyVersion",
+    )
+    actions = statement.get("Action", [])
+    matched = [
+        target
+        for target in targets
+        if any(action_matches(pattern, target) for pattern in actions)
+    ]
+    if not matched:
+        return None
+
+    resources = statement["Resource"]
+    severity = Severity.HIGH if "*" in resources else Severity.MEDIUM
+    condition_note = (
+        "Conditions are present but their effectiveness is not evaluated."
+        if "Condition" in statement
+        else "No conditions are present."
+    )
+
+    return Finding(
+        rule_id="IAM005",
+        severity=severity,
+        statement_index=index,
+        title="Permissions can change active managed policy versions",
+        description=(
+            f"Matched actions: {', '.join(matched)}. "
+            "CreatePolicyVersion can create a policy version and make it "
+            "active; SetDefaultPolicyVersion can activate an existing "
+            "version. Changes affect identities attached to the policy. "
+            "If an affected policy controls the caller's access, this "
+            "could enable privilege escalation. Policy contents, "
+            "attachments, and effective permissions are not inspected. "
+            f"{condition_note} This is a preliminary review priority, "
+            "not proof of an exploitable escalation path."
+        ),
+        remediation=(
+            "Remove unnecessary policy-version permissions. Restrict "
+            "required access to approved customer-managed policy ARNs "
+            "and controlled administrative roles. Review policy "
+            "attachments, available versions, conditions, and applicable "
+            "permission limits; monitor policy-version changes."
+        ),
+    )
