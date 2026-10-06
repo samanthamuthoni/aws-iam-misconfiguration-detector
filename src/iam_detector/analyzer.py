@@ -31,3 +31,27 @@ def load_policy(path: str | Path) -> dict[str, Any]:
         raise PolicyInputError("The policy must be a JSON object.")
 
     return policy
+
+
+def get_statements(policy: dict[str, Any]) -> list[dict[str, Any]]:
+    """Check the Statement container and return a list of statements."""
+    if "Statement" not in policy:
+        raise PolicyInputError("The policy is missing Statement.")
+
+    statements = policy["Statement"]
+
+    if isinstance(statements, dict):
+        statements = [statements]
+
+    if not isinstance(statements, list) or not statements:
+        raise PolicyInputError(
+            "Statement must be an object or a non-empty list."
+        )
+
+    for index, statement in enumerate(statements, start=1):
+        if not isinstance(statement, dict):
+            raise PolicyInputError(
+                f"Statement {index} must be a JSON object."
+            )
+
+    return statements
