@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from iam_detector.checks import check_admin_access
+from iam_detector.checks import check_admin_access, check_service_wildcard
 from iam_detector.models import Finding
 
 
@@ -105,9 +105,10 @@ def analyze_policy(policy: dict[str, Any]) -> list[Finding]:
 
     for index, statement in enumerate(statements, start=1):
         normalized = normalize_statement(statement, index)
-        finding = check_admin_access(normalized, index)
+        for check in (check_admin_access, check_service_wildcard):
+            finding = check(normalized, index)
 
-        if finding is not None:
-            findings.append(finding)
+            if finding is not None:
+                findings.append(finding)
 
     return findings

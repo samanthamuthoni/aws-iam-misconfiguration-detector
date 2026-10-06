@@ -37,3 +37,57 @@ def check_admin_access(statement: dict[str, Any], index: int = 1) -> Finding | N
             "controlled role."
         ),
     )
+
+
+def check_service_wildcard(statement: dict[str, Any], index: int = 1) -> Finding | None:
+    """Review exact service-wide action wildcards in Allow statements."""
+    if statement["Effect"] != "Allow" or "Resource" not in statement:
+        return None
+
+    actions = statement.get("Action", [])
+    resources = statement["Resource"]
+
+    # IAM001 already reports this unconditional administrative pattern.
+    if "*" in actions and "*" in resources and "Condition" not in statement:
+        return None
+
+    services: set[str] = set()
+
+    for action in actions:
+        service, separator, operation = action.partition(":")
+        if separator and service and operation == "*":
+            services.add(service.lower())
+
+    if not services:
+        return None
+
+    if "*" in resources:
+        severity = Severity.HIGH
+        scope_note = "Resource includes the exact global wildcard. "
+    else:
+        severity = Severity.MEDIUM
+        scope_note = (
+            "Resource has no exact global wildcard; its ARN scope still needs review. "
+        )
+
+    condition_note = (
+        "Conditions are present; their effectiveness has not been evaluated."
+        if "Condition" in statement
+        else "No conditions are present."
+    )
+
+    return Finding(
+        rule_id="IAM002",
+        severity=severity,
+        statement_index=index,
+        title=f"Broad service permissions: {', '.join(sorted(services))}",
+        description=(
+            "Service-wide action wildcards may permit reading, changing, "
+            "or deleting resources, depending on the service and applicable "
+            "resource permissions. " + scope_note + condition_note
+        ),
+        remediation=(
+            "Replace service-wide action wildcards with the required actions. "
+            "Scope resources where supported and review applicable conditions."
+        ),
+    )

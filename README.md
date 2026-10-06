@@ -14,13 +14,70 @@ Implemented:
   global wildcard in both Action and Resource.
 - Structured findings with severity, statement number, explanation, and
   remediation guidance.
-- Automated tests for input handling, normalization, and the first rule.
+- IAM002: service-wide action checks with preliminary resource-based severity.
+- Readable text reports and structured JSON reports.
+- Command-line interface with report-format selection and exit codes.
+- Automated tests for input handling, security checks, reports, and CLI behavior.
 
 Limitations:
 - This is not a complete AWS policy validator or effective-permissions evaluator.
 - Statements containing Condition are deferred by IAM001; they are not
   classified as safe.
-- Other security rules, condition interpretation, the command-line interface,
-  JSON report export, GitHub Actions, and live AWS scanning are not implemented yet.
+- Remaining security rules, condition interpretation, GitHub Actions, and
+  live AWS scanning are not implemented yet.
+- IAM002 severity is a preliminary review priority. ARN breadth and
+  condition effectiveness still require deeper analysis.
 
 Tests and Ruff checks have passed locally in GitHub Codespaces.
+
+
+## Local setup
+
+Run these commands from the repository root in Linux or GitHub Codespaces.
+The package requires Python 3.11 or newer; local verification currently uses
+Python 3.14.2.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e . -r requirements-dev.txt
+```
+
+## Usage
+
+Display a readable report for the synthetic administrative-access example:
+
+```bash
+python -m iam_detector.cli examples/admin-access.json
+```
+
+Display a structured JSON report:
+
+```bash
+python -m iam_detector.cli examples/admin-access.json --format json
+```
+
+Show available arguments:
+
+```bash
+python -m iam_detector.cli --help
+```
+
+Reports go to standard output. Input errors go to standard error.
+
+| Exit code | Meaning |
+|---|---|
+| 0 | No findings from the implemented checks |
+| 1 | Findings detected |
+| 2 | Invalid input, unreadable file, or invalid command-line arguments |
+
+The administrative-access example intentionally returns 1.
+Zero findings does not establish that a policy is safe.
+
+## Local quality checks
+
+```bash
+python -m ruff format --check src tests
+python -m ruff check src tests
+python -m pytest -q
+```
