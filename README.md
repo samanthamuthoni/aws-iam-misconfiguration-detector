@@ -104,7 +104,8 @@ Local validation: 76 tests passed, along with Ruff formatting and lint checks.
 
 ### Wildcard role selection with PassRole (IAM004)
 
-IAM004 reviews Allow statements with an explicit iam:PassRole action.
+IAM004 reviews Allow statements whose Action matches iam:PassRole,
+including wildcard patterns such as iam:*, iam:Pass*, and IAM:PassRol?.
 It assigns High priority for Resource "*" and Medium priority for
 other resource patterns containing "*" or "?".
 
@@ -112,8 +113,9 @@ The rule reports conditions without evaluating their effectiveness.
 It does not inspect role permissions, role trust, or related service
 permissions, so a finding does not prove an exploitable escalation path.
 
-Current limitations: IAM004 does not detect PassRole implied by wildcard
-actions or NotAction, and it does not analyze NotResource. An exact role
+Current limitations: IAM004 does not analyze NotAction or NotResource.
+Unconditional full administrative access is reported by IAM001 instead
+of generating an overlapping IAM004 finding. An exact role
 ARN receiving no IAM004 finding does not establish that the role is safe.
 
 Run the synthetic example:
@@ -124,3 +126,7 @@ python -m iam_detector.cli examples/passrole-broad.json
 
 Local validation after adding IAM004: 85 tests passed, along with Ruff
 formatting and lint checks.
+
+
+Latest local validation after the PassRole wildcard update: 94 tests passed; Ruff formatting and lint checks passed.
+GitHub Actions verification for this update is pending.

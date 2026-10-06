@@ -44,11 +44,17 @@ This is static review, not effective permission evaluation.
 Conditions are not interpreted. Zero findings does not establish safety.
 Severity indicates review priority, not proven exploitability.
 
-IAM004 checks explicit PassRole actions only; it does not analyze
-wildcard actions, NotAction, or NotResource. Role permissions, trust,
-and related service permissions are not inspected.
+IAM004 matches explicit PassRole actions and wildcard action patterns.
+It does not analyze NotAction or NotResource. Unconditional full
+administrative access is reported by IAM001 without a duplicate IAM004
+finding. Role permissions, trust, and related service permissions are
+not inspected.
 
 ## Future work
 Broader wildcard analysis, additional escalation checks, MFA and
 condition handling, and more complete policy validation.
 Live AWS scanning is not implemented.
+
+
+Latest local validation after the PassRole wildcard update: 94 tests passed; Ruff formatting and lint checks passed.
+GitHub Actions verification for this update is pending.

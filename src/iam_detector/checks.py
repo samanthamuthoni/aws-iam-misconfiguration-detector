@@ -1,3 +1,5 @@
+import re
+
 """Security checks for normalized IAM permission statements."""
 
 from typing import Any
@@ -147,12 +149,16 @@ def check_allow_exclusions(statement: dict[str, Any], index: int = 1) -> Finding
 
 
 def check_passrole(statement: dict[str, Any], index: int = 1) -> Finding | None:
-    """Review explicit PassRole grants with wildcard resource scope."""
+    """Review PassRole grants with wildcard resource scope."""
     if statement["Effect"] != "Allow" or "Resource" not in statement:
         return None
 
+    # IAM001 already reports unconditional full administrative access.
+    if check_admin_access(statement, index) is not None:
+        return None
+
     actions = statement.get("Action", [])
-    if not any(action.lower() == "iam:passrole" for action in actions):
+    if not any(action_matches(action, "iam:PassRole") for action in actions):
         return None
 
     resources = statement["Resource"]
@@ -184,3 +190,10 @@ def check_passrole(statement: dict[str, Any], index: int = 1) -> Finding | None:
             "roles' permissions, trust policies, and related service access."
         ),
     )
+
+
+def action_matches(pattern: str, action: str) -> bool:
+    """Match IAM action names using only * and ? wildcards."""
+    expression = re.escape(pattern.lower())
+    expression = expression.replace(r"\*", ".*").replace(r"\?", ".")
+    return re.fullmatch(expression, action.lower()) is not None
